@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const User = require('../user');
+const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -61,7 +61,7 @@ async function loginUser(req, res) {
 
         const token = generateToken(user._id);
 
-        res.json({ success:true, message: 'Login successful', 
+        res.status(200).json({ success:true, message: 'Login successful', 
             token, 
             user: { 
                 id: user._id, 

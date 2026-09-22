@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-// bcrypt is used for password hashing
+// bcrypt is used for password hashing 
 const bcrypt = require('bcrypt');
 
 // Define the User schema
