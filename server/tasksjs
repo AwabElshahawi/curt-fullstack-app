@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const taskStatusEnum = ['To Do', 'In Progress', 'Done'];
 const taskPriorityEnum = ['Low', 'Medium', 'High'];
 
+//Define the Task schema
 const taskSchema = new mongoose.Schema({
     title: {
         type: String,

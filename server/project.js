@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+//Define the Project schema
 const projectSchema = new mongoose.Schema({
     name: {
         type: String,
