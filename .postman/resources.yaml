@@ -2,6 +2,12 @@
 workspace:
   id: e8fcbe58-338b-493b-8f0f-f21023240147
 
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+
+cloudResources:
+  collections:
+    ../postman/collections/CURT Fullstack Task - API Tests: 3644898f-651e-4940-ac94-5dc2afb40f24
+
 # All resources in the `postman/` folder are automatically registered in Local View.
 # Point to additional files outside the `postman/` folder to register them individually. Example:
 #localResources:

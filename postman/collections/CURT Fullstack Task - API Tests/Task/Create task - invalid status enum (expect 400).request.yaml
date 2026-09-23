@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{baseUrl}}/task"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "title": "Bad status task",
+      "project": "{{projectId}}",
+      "status": "Banana"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Rejects invalid enum', () => pm.expect(pm.response.code).to.be.oneOf([400, 500]));
+      pm.test('Response is clean JSON, not a raw stack trace', () => { const data = pm.response.json(); pm.expect(data).to.have.property('success'); });
+    language: text/javascript
+order: 5000

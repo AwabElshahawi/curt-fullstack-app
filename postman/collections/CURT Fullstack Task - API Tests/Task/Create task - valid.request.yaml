@@ -1,0 +1,24 @@
+$kind: http-request
+url: "{{baseUrl}}/task"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "title": "Set up telemetry dashboard",
+      "description": "Build the live data view",
+      "status": "To Do",
+      "priority": "High",
+      "project": "{{projectId}}",
+      "assignedTo": "{{userId}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status is 201', () => pm.response.to.have.status(201));
+      const data = pm.response.json();
+      if (data.task && data.task._id) pm.collectionVariables.set('taskId', data.task._id);
+    language: text/javascript
+order: 1000

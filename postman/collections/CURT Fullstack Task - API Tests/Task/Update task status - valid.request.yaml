@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/task/{{taskId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "status": "In Progress"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status is 200', () => pm.response.to.have.status(200));
+      pm.test('Status field updated', () => pm.expect(pm.response.json().task.status).to.eql('In Progress'));
+    language: text/javascript
+order: 10000

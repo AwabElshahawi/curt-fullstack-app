@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{baseUrl}}/projects"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "name": "Race Car Software",
+      "description": "Telemetry and dashboard",
+      "owner": "{{userId}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status is 201', () => pm.response.to.have.status(201));
+      const data = pm.response.json();
+      pm.test('Returns project', () => pm.expect(data.project).to.be.an('object'));
+      if (data.project && data.project._id) pm.collectionVariables.set('projectId', data.project._id);
+    language: text/javascript
+order: 1000

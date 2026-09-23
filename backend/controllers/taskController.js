@@ -1,11 +1,18 @@
-const Task = require('../models/tasks');
+const Task = require('../models/task');
+const Project = require('../models/project');
 
 async function createTask(req, res) {
     try {
         const { title, description, status, priority, project, assignedTo, dueDate } = req.body;
-
+        console.log('req.body:', req.body);
+        console.log('project value:', JSON.stringify(project));
         if (!title || !project) {
             return res.status(400).json({ success: false, message: 'Please provide task title and project' });
+        }
+        
+        const projectExists = await Project.findById(project);
+        if (!projectExists) {
+            return res.status(404).json({ success: false, message: 'Project not found' });
         }
 
         const newTask = await Task.create({ title, description, status, priority, project, assignedTo, dueDate });

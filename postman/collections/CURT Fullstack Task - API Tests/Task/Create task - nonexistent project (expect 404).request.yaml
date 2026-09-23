@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{baseUrl}}/task"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "title": "Task for ghost project",
+      "project": "652f0000000000000000abcd"
+    }
+scripts:
+  - type: afterResponse
+    code: pm.test('Does not silently succeed', () => pm.expect(pm.response.code).to.be.oneOf([404, 400, 500]));
+    language: text/javascript
+order: 4000

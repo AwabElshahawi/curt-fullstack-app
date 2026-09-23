@@ -5,7 +5,7 @@ const { createProject , getProjects , getProjectsByID, updateProject, deleteProj
 router.post('/', createProject);
 router.get('/', getProjects);
 router.get('/:id', getProjectsByID);
-router.put('/update/:id', updateProject);
-router.delete('/delete/:id', deleteProject);
+router.put('/:id', updateProject);
+router.delete('/:id', deleteProject);
 
 module.exports = router;

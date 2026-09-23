@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{baseUrl}}/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "email": "awab@example.com",
+      "password": "Password123"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status is 200', () => pm.response.to.have.status(200));
+      const data = pm.response.json();
+      pm.test('Returns token', () => pm.expect(data.token).to.be.a('string'));
+      if (data.token) pm.collectionVariables.set('token', data.token);
+      if (data.user && data.user.id) pm.collectionVariables.set('userId', data.user.id);
+    language: text/javascript
+order: 4000

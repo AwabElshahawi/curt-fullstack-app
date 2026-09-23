@@ -1,0 +1,8 @@
+$kind: collection
+description: Auth, Project, and Task CRUD tests for the Team Project Management System (Level 1, no auth enforcement yet).
+variables:
+  baseUrl: http://localhost:5000/api
+  token: ""
+  userId: ""
+  projectId: ""
+  taskId: ""

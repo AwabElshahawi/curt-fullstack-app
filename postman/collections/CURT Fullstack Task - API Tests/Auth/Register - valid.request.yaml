@@ -1,0 +1,24 @@
+$kind: http-request
+url: "{{baseUrl}}/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "username": "awab",
+      "email": "awab@example.com",
+      "password": "Password123"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status is 201', () => pm.response.to.have.status(201));
+      const data = pm.response.json();
+      pm.test('Returns token', () => pm.expect(data.token).to.be.a('string'));
+      pm.test('No password in response', () => pm.expect(data.user.password).to.be.undefined);
+      if (data.token) pm.collectionVariables.set('token', data.token);
+      if (data.user && data.user.id) pm.collectionVariables.set('userId', data.user.id);
+    language: text/javascript
+order: 1000

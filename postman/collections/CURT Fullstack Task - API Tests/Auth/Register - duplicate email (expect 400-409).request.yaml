@@ -1,0 +1,21 @@
+$kind: http-request
+name: Register - duplicate email (expect 400/409)
+url: "{{baseUrl}}/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "username": "awab2",
+      "email": "awab@example.com",
+      "password": "Password123"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Rejects duplicate email', () => pm.expect(pm.response.code).to.be.oneOf([400, 409]));
+      pm.test('success is false', () => pm.expect(pm.response.json().success).to.eql(false));
+    language: text/javascript
+order: 2000

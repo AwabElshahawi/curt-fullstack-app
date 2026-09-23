@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/task"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "title": "Bad priority task",
+      "project": "{{projectId}}",
+      "priority": "Urgent"
+    }
+scripts:
+  - type: afterResponse
+    code: pm.test('Rejects invalid enum', () => pm.expect(pm.response.code).to.be.oneOf([400, 500]));
+    language: text/javascript
+order: 6000

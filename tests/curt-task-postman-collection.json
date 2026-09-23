@@ -1,0 +1,594 @@
+{
+  "info": {
+    "name": "CURT Fullstack Task - API Tests",
+    "description": "Auth, Project, and Task CRUD tests for the Team Project Management System (Level 1, no auth enforcement yet).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "token", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "projectId", "value": "" },
+    { "key": "taskId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register - valid",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"awab\",\n  \"email\": \"awab@example.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json();",
+                  "pm.test('Returns token', () => pm.expect(data.token).to.be.a('string'));",
+                  "pm.test('No password in response', () => pm.expect(data.user.password).to.be.undefined);",
+                  "if (data.token) pm.collectionVariables.set('token', data.token);",
+                  "if (data.user && data.user.id) pm.collectionVariables.set('userId', data.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register - duplicate email (expect 400/409)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"awab2\",\n  \"email\": \"awab@example.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Rejects duplicate email', () => pm.expect(pm.response.code).to.be.oneOf([400, 409]));",
+                  "pm.test('success is false', () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register - missing fields (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nofields@example.com\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 400', () => pm.response.to.have.status(400));"] }
+            }
+          ]
+        },
+        {
+          "name": "Login - valid",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"awab@example.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "pm.test('Returns token', () => pm.expect(data.token).to.be.a('string'));",
+                  "if (data.token) pm.collectionVariables.set('token', data.token);",
+                  "if (data.user && data.user.id) pm.collectionVariables.set('userId', data.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - wrong password (expect 401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"awab@example.com\",\n  \"password\": \"WrongPassword\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 401', () => pm.response.to.have.status(401));"] }
+            }
+          ]
+        },
+        {
+          "name": "Login - nonexistent email (expect 401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nobody@example.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 401', () => pm.response.to.have.status(401));"] }
+            }
+          ]
+        },
+        {
+          "name": "Login - missing fields (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"awab@example.com\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 400', () => pm.response.to.have.status(400));"] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Create project - valid",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Race Car Software\",\n  \"description\": \"Telemetry and dashboard\",\n  \"owner\": \"{{userId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/projects", "host": ["{{baseUrl}}"], "path": ["projects"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json();",
+                  "pm.test('Returns project', () => pm.expect(data.project).to.be.an('object'));",
+                  "if (data.project && data.project._id) pm.collectionVariables.set('projectId', data.project._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create project - missing name (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"No name given\",\n  \"owner\": \"{{userId}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/projects", "host": ["{{baseUrl}}"], "path": ["projects"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 400', () => pm.response.to.have.status(400));"] }
+            }
+          ]
+        },
+        {
+          "name": "Create project - missing owner (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"No Owner Project\"\n}" },
+            "url": { "raw": "{{baseUrl}}/projects", "host": ["{{baseUrl}}"], "path": ["projects"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 400', () => pm.response.to.have.status(400));"] }
+            }
+          ]
+        },
+        {
+          "name": "Get all projects",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/projects", "host": ["{{baseUrl}}"], "path": ["projects"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns array', () => pm.expect(pm.response.json().projects).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get project by id - valid",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Owner is populated', () => pm.expect(pm.response.json().project.owner).to.be.an('object'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get project by id - not found (expect 404)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/projects/652f0000000000000000abcd", "host": ["{{baseUrl}}"], "path": ["projects", "652f0000000000000000abcd"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 404', () => pm.response.to.have.status(404));"] }
+            }
+          ]
+        },
+        {
+          "name": "Get project by id - invalid id format (expect 400/500)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/projects/not-a-valid-id", "host": ["{{baseUrl}}"], "path": ["projects", "not-a-valid-id"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Does not crash unhandled', () => pm.expect(pm.response.code).to.be.oneOf([400, 404, 500]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update project - valid",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Race Car Software v2\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Name updated', () => pm.expect(pm.response.json().project.name).to.eql('Race Car Software v2'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update project - not found (expect 404)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Ghost Project\"\n}" },
+            "url": { "raw": "{{baseUrl}}/projects/652f0000000000000000abcd", "host": ["{{baseUrl}}"], "path": ["projects", "652f0000000000000000abcd"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 404', () => pm.response.to.have.status(404));"] }
+            }
+          ]
+        },
+        {
+          "name": "Delete project - not found (expect 404)",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/projects/652f0000000000000000abcd", "host": ["{{baseUrl}}"], "path": ["projects", "652f0000000000000000abcd"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 404', () => pm.response.to.have.status(404));"] }
+            }
+          ]
+        },
+        {
+          "name": "Delete project - valid (run last)",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 200', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Task",
+      "item": [
+        {
+          "name": "Create task - valid",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Set up telemetry dashboard\",\n  \"description\": \"Build the live data view\",\n  \"status\": \"To Do\",\n  \"priority\": \"High\",\n  \"project\": \"{{projectId}}\",\n  \"assignedTo\": \"{{userId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/task", "host": ["{{baseUrl}}"], "path": ["task"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json();",
+                  "if (data.task && data.task._id) pm.collectionVariables.set('taskId', data.task._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create task - missing title (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"project\": \"{{projectId}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/task", "host": ["{{baseUrl}}"], "path": ["task"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 400', () => pm.response.to.have.status(400));"] }
+            }
+          ]
+        },
+        {
+          "name": "Create task - missing project (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Orphan task, no project\"\n}" },
+            "url": { "raw": "{{baseUrl}}/task", "host": ["{{baseUrl}}"], "path": ["task"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 400', () => pm.response.to.have.status(400));"] }
+            }
+          ]
+        },
+        {
+          "name": "Create task - nonexistent project (expect 404)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Task for ghost project\",\n  \"project\": \"652f0000000000000000abcd\"\n}" },
+            "url": { "raw": "{{baseUrl}}/task", "host": ["{{baseUrl}}"], "path": ["task"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Does not silently succeed', () => pm.expect(pm.response.code).to.be.oneOf([404, 400, 500]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create task - invalid status enum (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Bad status task\",\n  \"project\": \"{{projectId}}\",\n  \"status\": \"Banana\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/task", "host": ["{{baseUrl}}"], "path": ["task"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Rejects invalid enum', () => pm.expect(pm.response.code).to.be.oneOf([400, 500]));",
+                  "pm.test('Response is clean JSON, not a raw stack trace', () => { const data = pm.response.json(); pm.expect(data).to.have.property('success'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create task - invalid priority enum (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Bad priority task\",\n  \"project\": \"{{projectId}}\",\n  \"priority\": \"Urgent\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/task", "host": ["{{baseUrl}}"], "path": ["task"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Rejects invalid enum', () => pm.expect(pm.response.code).to.be.oneOf([400, 500]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get all task",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/task", "host": ["{{baseUrl}}"], "path": ["task"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 200', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        },
+        {
+          "name": "Get task by id - valid",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/task/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["task", "{{taskId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 200', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        },
+        {
+          "name": "Get task by id - not found (expect 404)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/task/652f0000000000000000abcd", "host": ["{{baseUrl}}"], "path": ["task", "652f0000000000000000abcd"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 404', () => pm.response.to.have.status(404));"] }
+            }
+          ]
+        },
+        {
+          "name": "Update task status - valid",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"In Progress\"\n}" },
+            "url": { "raw": "{{baseUrl}}/task/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["task", "{{taskId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status field updated', () => pm.expect(pm.response.json().task.status).to.eql('In Progress'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update task priority - valid",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"priority\": \"Low\"\n}" },
+            "url": { "raw": "{{baseUrl}}/task/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["task", "{{taskId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 200', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        },
+        {
+          "name": "Update task - not found (expect 404)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"Done\"\n}" },
+            "url": { "raw": "{{baseUrl}}/task/652f0000000000000000abcd", "host": ["{{baseUrl}}"], "path": ["task", "652f0000000000000000abcd"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 404', () => pm.response.to.have.status(404));"] }
+            }
+          ]
+        },
+        {
+          "name": "Delete task - not found (expect 404)",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/task/652f0000000000000000abcd", "host": ["{{baseUrl}}"], "path": ["task", "652f0000000000000000abcd"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 404', () => pm.response.to.have.status(404));"] }
+            }
+          ]
+        },
+        {
+          "name": "Delete task - valid (run last)",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/task/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["task", "{{taskId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('Status is 200', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

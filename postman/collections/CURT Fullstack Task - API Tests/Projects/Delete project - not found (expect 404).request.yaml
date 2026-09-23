@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{baseUrl}}/projects/652f0000000000000000abcd"
+method: DELETE
+scripts:
+  - type: afterResponse
+    code: pm.test('Status is 404', () => pm.response.to.have.status(404));
+    language: text/javascript
+order: 10000
