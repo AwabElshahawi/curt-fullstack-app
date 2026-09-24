@@ -9,7 +9,9 @@ const connectDB = require('./config/config');
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
 const taskRoutes = require('./routes/task');
+const cors = require('cors');
 
+app.use(cors())
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
